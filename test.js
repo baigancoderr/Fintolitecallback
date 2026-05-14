@@ -1,26 +1,73 @@
 const axios = require("axios");
 
-const data = {
 
-    // MongoDB me jo REAL address_in hai wahi lagao
-    address_in: "0xB07259168daa2b969cF09BdA686b2c0Ac35750Ae",
+// =========================================
+// TEST CALLBACK DATA
+// =========================================
+
+const callbackData = {
+
+    paymentId: "test-payment-123",
 
     status: "completed",
 
-    transaction_hash: "0xTXHASH123"
+    address_in:
+        "0xB07259168daa2b969cF09BdA686b2c0Ac35750Ae",
+
+    address_out:
+        "0xB4011122995F737DAf67E358c870210CEdf4bC4f",
+
+    transaction_hash:
+        "0xTXHASH123456789",
+
+    fee: 0.1,
+
+    sent_amount: 11,
+
+    value: 11,
+
+    timestamp: Date.now(),
+
+    fee_txid:
+        "0xFEEHASH123"
 };
 
-// BASE64 ENCODE
+
+// =========================================
+// ENCODE BASE64
+// =========================================
 
 const encoded = Buffer
-    .from(JSON.stringify(data))
+    .from(JSON.stringify(callbackData))
     .toString("base64");
 
-console.log("ENCODED:");
+
+// =========================================
+// SHOW TEST DATA
+// =========================================
+
+console.log("=================================");
+console.log("ORIGINAL CALLBACK JSON:");
+console.log(
+    JSON.stringify(
+        callbackData,
+        null,
+        2
+    )
+);
+
+console.log("=================================");
+console.log("BASE64 ENCODED:");
 console.log(encoded);
 
+console.log("=================================");
+console.log("SENDING CALLBACK...");
+console.log("=================================");
 
-// SEND CALLBACK
+
+// =========================================
+// SEND CALLBACK REQUEST
+// =========================================
 
 axios.post(
     "http://localhost:5000/api/deposit/callback",
@@ -28,27 +75,50 @@ axios.post(
         data: encoded
     }
 )
+
 .then((res) => {
 
-    console.log("SUCCESS:");
-    console.log(res.data);
+    console.log("=================================");
+    console.log("SUCCESS RESPONSE:");
+    console.log(
+        JSON.stringify(
+            res.data,
+            null,
+            2
+        )
+    );
+    console.log("=================================");
 
 })
+
 .catch((err) => {
 
-    console.log("FULL ERROR:");
+    console.log("=================================");
+    console.log("CALLBACK TEST ERROR");
+    console.log("=================================");
 
+    // FULL ERROR
+
+    console.log("FULL ERROR:");
     console.log(err);
 
-    console.log("ERROR RESPONSE:");
+    console.log("=================================");
 
+    // RESPONSE ERROR
+
+    console.log("ERROR RESPONSE:");
     console.log(
         err.response?.data
     );
 
-    console.log("ERROR MESSAGE:");
+    console.log("=================================");
 
+    // MESSAGE
+
+    console.log("ERROR MESSAGE:");
     console.log(
         err.message
     );
+
+    console.log("=================================");
 });

@@ -138,26 +138,28 @@ exports.callbackHandler = async (req, res) => {
 
     try {
 
+        console.log("=================================");
         console.log("CALLBACK RECEIVED");
+        console.log("=================================");
 
         // SUPPORT BOTH GET + POST
 
         const data =
             req.body.data || req.query.data;
 
-        // VALIDATION
+        // IF CALLBACK OPENED DIRECTLY IN BROWSER
 
         if (!data || typeof data !== "string") {
 
             console.log(
-                "Missing or invalid callback data"
+                "Callback endpoint opened without data"
             );
 
-            return res.status(400).json({
+            return res.status(200).json({
 
-                status: "error",
+                success: true,
 
-                error: "Missing or invalid data"
+                message: "Callback endpoint working 🚀"
             });
         }
 
@@ -171,35 +173,38 @@ exports.callbackHandler = async (req, res) => {
 
         try {
 
-            callbackData = JSON.parse(decodedString);
+            callbackData =
+                JSON.parse(decodedString);
 
         } catch (parseError) {
 
-            console.log(
-                "JSON Parse Error:",
-                parseError.message
-            );
+            console.log("=================================");
+            console.log("JSON PARSE ERROR:");
+            console.log(parseError.message);
 
             return res.status(400).json({
 
                 status: "error",
 
-                error: "Invalid JSON formattt"
+                error: "Invalid JSON format"
             });
         }
 
-        // LOG FULL CALLBACK
+        // FULL DECODED CALLBACK
 
+        console.log("=================================");
+        console.log("FULL DECODED CALLBACK:");
         console.log(
-            "DECODED CALLBACK:"
+            JSON.stringify(
+                callbackData,
+                null,
+                2
+            )
         );
-
-        console.log(
-            JSON.stringify(callbackData, null, 2)
-        );
+        console.log("=================================");
 
         /*
-            EXAMPLE CALLBACK
+            EXPECTED CALLBACK
 
             {
                 paymentId,
@@ -217,11 +222,13 @@ exports.callbackHandler = async (req, res) => {
 
         // FIND DEPOSIT
 
-        const deposit = await Deposit.findOne({
+        const deposit =
+            await Deposit.findOne({
 
-            address_in: callbackData.address_in
+                address_in:
+                    callbackData.address_in
 
-        });
+            });
 
         // NOT FOUND
 
@@ -243,7 +250,7 @@ exports.callbackHandler = async (req, res) => {
 
             console.log("Already processed");
 
-            return res.json({
+            return res.status(200).json({
 
                 status: "success",
 
@@ -259,11 +266,15 @@ exports.callbackHandler = async (req, res) => {
         deposit.transaction_hash =
             callbackData.transaction_hash || "";
 
+        // OPTIONAL EXTRA DATA
+
+        deposit.callbackData = callbackData;
+
         await deposit.save();
 
-        console.log("Deposit updated");
+        console.log("Deposit updated successfully");
 
-        // CREDIT USER BALANCE
+        // PAYMENT SUCCESS
 
         if (
             callbackData.status === "completed"
@@ -274,42 +285,33 @@ exports.callbackHandler = async (req, res) => {
             );
 
             /*
-                YOUR USER BALANCE UPDATE HERE
-
-                Example:
-
-                const user = await User.findById(
-                    deposit.userId
-                );
-
-                user.balance += Number(
-                    callbackData.value
-                );
-
-                await user.save();
+                USER BALANCE UPDATE HERE
             */
         }
 
+        // SUCCESS RESPONSE
+
         return res.status(200).json({
 
-            status: "success",
+            success: true,
 
-            message: "Callback processed successfully"
+            message:
+                "Callback processed successfully",
+
+            callbackData
         });
 
     } catch (error) {
 
-        console.log(
-            "CALLBACK ERROR:"
-        );
-
-        console.log(error.message);
+        console.log("=================================");
+        console.log("CALLBACK ERROR:");
+        console.log(error);
 
         return res.status(500).json({
 
             status: "error",
 
-            error: "Internal server error"
+            error: error.message
         });
     }
 };
