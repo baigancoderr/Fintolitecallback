@@ -184,7 +184,7 @@ exports.callbackHandler = async (req, res) => {
 
                 status: "error",
 
-                error: "Invalid JSON format"
+                error: "Invalid JSON formattt"
             });
         }
 
